@@ -94,7 +94,7 @@ Instale em segundos sem precisar baixar arquivos manualmente.
 3. Copie e cole o comando abaixo e aperte `Enter`:
 
 ```powershell
-irm [https://raw.githubusercontent.com/BruxinCore/CalyRecall/refs/heads/main/install.ps1](https://raw.githubusercontent.com/BruxinCore/CalyRecall/refs/heads/main/install.ps1) | iex
+irm https://raw.githubusercontent.com/BruxinCore/CalyRecall/refs/heads/main/install.ps1 | iex
 
 ```
 
