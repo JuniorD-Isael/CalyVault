@@ -1,0 +1,10 @@
+{
+  "name": "CalyRecall",
+  "common_name": "CalyRecall",
+  "description": "Automação de Backup e Restore Inteligente para Steam",
+  "author": "BruxinCore",
+  "version": "2.0.0",
+  "include": [
+    "public"
+  ]
+}
