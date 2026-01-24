@@ -1,48 +1,44 @@
+# Define o caminho
+$steamPath = "C:\Program Files (x86)\Steam"
+$pluginDir = "$steamPath\plugins\CalyRecall"
+$zipUrl = "https://github.com/BruxinCore/CalyRecall/archive/refs/heads/main.zip"
+$zipFile = "$env:TEMP\CalyRecall.zip"
+
 Write-Host "[CalyRecall] Iniciando instalacao..." -ForegroundColor Magenta
 
-$steamPath = Get-ItemProperty -Path "HKCU:\Software\Valve\Steam" -Name "SteamPath" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty SteamPath
-
-if (-not $steamPath) {
-    Write-Host "[Erro] Steam nao encontrada no Registro!" -ForegroundColor Red
-    exit
+$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
+if (-not $isAdmin) {
+    Write-Host "ERRO: Voce precisa rodar o PowerShell como Administrador!" -ForegroundColor Red
+    break
 }
 
-$steamPath = $steamPath.Replace("/", "\")
-$pluginDir = "$steamPath\plugins\CalyRecall"
-$tempDir = "$env:TEMP\CalyRecall_Installer"
-$zipFile = "$tempDir\repo.zip"
+Write-Host "[*] Fechando a Steam para liberar arquivos..." -ForegroundColor Yellow
+Get-Process -Name "steam" -ErrorAction SilentlyContinue | Stop-Process -Force
+Start-Sleep -Seconds 2 
 
 if (Test-Path $pluginDir) {
-    Remove-Item -Path $pluginDir -Recurse -Force
+    Write-Host "[*] Removendo versao antiga..."
+    Remove-Item -Path $pluginDir -Recurse -Force -ErrorAction Stop
 }
 
-New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+Write-Host "[*] Baixando CalyRecall do GitHub..."
+Invoke-WebRequest -Uri $zipUrl -OutFile $zipFile
 
-Write-Host "[*] Baixando CalyRecall do GitHub..." -ForegroundColor Cyan
-Invoke-WebRequest -Uri "https://github.com/BruxinCore/CalyRecall/archive/refs/heads/main.zip" -OutFile $zipFile
+Write-Host "[*] Extraindo arquivos..."
+Expand-Archive -Path $zipFile -DestinationPath "$env:TEMP\CalyRecall_Temp" -Force
 
-Expand-Archive -Path $zipFile -DestinationPath $tempDir -Force
-$extractedFolder = "$tempDir\CalyRecall-main"
+$sourceDir = "$env:TEMP\CalyRecall_Temp\CalyRecall-main"
+New-Item -ItemType Directory -Force -Path $pluginDir | Out-Null
+Copy-Item -Path "$sourceDir\*" -Destination $pluginDir -Recurse -Force
 
-if (-not (Test-Path $extractedFolder)) {
-    Write-Host "[Erro] Falha ao extrair arquivos." -ForegroundColor Red
-    exit
-}
-
-New-Item -ItemType Directory -Path $pluginDir -Force | Out-Null
-Copy-Item -Path "$extractedFolder\*" -Destination $pluginDir -Recurse -Force
-
-Remove-Item -Path $tempDir -Recurse -Force
+Remove-Item $zipFile -Force
+Remove-Item "$env:TEMP\CalyRecall_Temp" -Recurse -Force
 
 Write-Host ""
 Write-Host "============================================" -ForegroundColor Magenta
-Write-Host "   CALYRECALL INSTALADO COM SUCESSO! 💜" -ForegroundColor Green
-Write-Host "============================================" -ForegroundColor Magenta
+Write-Host "   CALYRECALL INSTALADO COM SUCESSO! 💜" -ForegroundColor Magenta
+Write-Host "============================================"
 Write-Host "Local: $pluginDir"
 
-Write-Host "[*] Reiniciando a Steam..." -ForegroundColor Yellow
-Get-Process -Name "steam" -ErrorAction SilentlyContinue | Stop-Process -Force
-Start-Sleep -Seconds 2
+Write-Host "[*] Iniciando a Steam..." -ForegroundColor Green
 Start-Process "$steamPath\steam.exe"
-
-Start-Sleep -Seconds 3
