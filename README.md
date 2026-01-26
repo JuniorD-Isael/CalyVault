@@ -8,7 +8,7 @@
 [![Python](https://img.shields.io/badge/Backend-Python-ffe800?style=for-the-badge&logo=python&logoColor=black)](https://www.python.org/)
 [![Discord](https://img.shields.io/badge/Community-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/DQYxmFaywK)
 [![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)]()
-[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)]()
+[![License](https://img.shields.io/badge/License-CSAL-red?style=for-the-badge)](LICENSE)
 
 <p align="center">
   <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3BxdGp6Z3V4ZnV4ZnV4ZnV4ZnV4ZnV4ZnV4ZnV4ZnV4ZnV4eiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/LMcB8XjhG7ck/giphy.gif" width="100%" height="4" alt="divider">
@@ -30,7 +30,7 @@ Agora com o novo sistema de <strong>Restore</strong>, você pode reverter para q
 
 | Recurso | Descrição |
 | :--- | :--- |
-| 🎮 **Game Awareness** | Identifica automaticamente qual jogo foi fechado, exibindo o **Nome** e a **Capa** na lista de backups. |
+| 🎮 **Game Awareness** |Identifica automaticamente qual jogo foi fechado, exibindo o **Nome Real** e a **Capa Oficial** na lista de backups. |
 | 🕵️ **Monitoramento Passivo** | Detecta automaticamente o encerramento de processos de jogos (AppID). Zero impacto na performance. |
 | 📦 **Backup Cirúrgico** | Salva apenas o que importa (userdata, stats, cache, configs), ignorando o "lixo" temporário. |
 | 🔄 **Time Travel (Restore)** | Restaure backups antigos instantaneamente através de uma interface visual integrada. |
@@ -58,7 +58,7 @@ Ao clicar, uma lista com todos os seus backups aparecerá, agora com os ícones 
 * **Deletar (🗑️):** Remova backups que não precisa mais.
 
 <div align="center">
-  <img src="https://i.imgur.com/w3NpTcM.png" alt="Menu de Restore" width="50%">
+  <img src="https://i.imgur.com/wRipSZq.png" alt="Menu de Restore" width="50%">
 </div>
 
 ### 3. Confirmação Visual
@@ -109,10 +109,10 @@ A forma mais fácil, bonita e segura de instalar.
 ### ⚙️ Instalação Personalizada
 O instalador do CalyRecall é inteligente e permite flexibilidade total:
 
-* **Steam em outro local?** O instalador tenta detectar sua Steam automaticamente. Caso você tenha instalado a Steam em um HD secundário (ex: `D:\Games\Steam`), você pode selecionar a pasta correta manualmente clicando no ícone de pasta 📂.
+* **Steam em outro local?** O instalador tenta detectar sua Steam automaticamente. Caso você tenha instalado a Steam em um HD/SSD secundário (ex: `D:\Games\Steam`), você pode selecionar a pasta correta manualmente clicando no ícone de pasta 📂.
 
 * **Pasta de Backups Personalizada:**
-  Por padrão, os backups ficam dentro da pasta do plugin. Se você tem pouco espaço no disco principal ou prefere salvar seus saves em outro lugar (como uma nuvem ou HD externo), você pode escolher uma **Pasta de Backup Personalizada** durante a instalação.
+  Por padrão, os backups ficam dentro da pasta do plugin. Se você tem pouco espaço no disco principal ou prefere salvar seus saves em outro lugar (como uma nuvem ou HD/SSD externo), você pode escolher uma **Pasta de Backup Personalizada** durante a instalação.
 
 ---
 
