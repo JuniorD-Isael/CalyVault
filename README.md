@@ -6,6 +6,7 @@
 
 [![Millennium](https://img.shields.io/badge/Millennium-Compatible-8b5cf6?style=for-the-badge&logo=steam)](https://steambrew.app/)
 [![Python](https://img.shields.io/badge/Backend-Python-ffe800?style=for-the-badge&logo=python&logoColor=black)](https://www.python.org/)
+[![Discord](https://img.shields.io/badge/Community-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/DQYxmFaywK)
 [![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)]()
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)]()
 
@@ -32,6 +33,7 @@ Agora com o novo sistema de <strong>Restore</strong>, você pode reverter para q
 | 🕵️ **Monitoramento Passivo** | Detecta automaticamente o encerramento de processos de jogos (AppID). Zero impacto na performance. |
 | 📦 **Backup Cirúrgico** | Salva apenas o que importa (userdata, stats, cache, configs), ignorando o "lixo" temporário. |
 | 🔄 **Time Travel (Restore)** | Restaure backups antigos instantaneamente através de uma interface visual integrada. |
+| ✏️ **Gerenciamento Total** | **Novo!** Renomeie backups (ex: "Antes do Boss") ou delete snapshots antigos direto na interface. |
 | 🔔 **Notificações Nativas** | Feedback visual discreto via Windows Toast ao concluir operações. |
 | 🗃️ **Histórico Organizado** | Cria pastas timestamped para você voltar no tempo quando quiser. |
 
@@ -48,8 +50,11 @@ No canto inferior direito da sua Steam, procure pelo **Botão Roxo com Ícone de
   <img src="https://i.imgur.com/gReSM17.png" alt="Botão CalyRecall" width="35%">
 </div>
 
-### 2. Escolha o Ponto de Restauração
-Ao clicar, uma lista com todos os seus backups organizados por data irá aparecer. Basta selecionar o momento para o qual deseja voltar.
+### 2. Gerenciamento Visual
+Ao clicar, uma lista com todos os seus backups aparecerá. 
+* **Restaurar:** Clique no botão grande para voltar no tempo.
+* **Renomear (✏️):** Dê apelidos aos seus backups para lembrar de momentos importantes.
+* **Deletar (🗑️):** Remova backups que não precisa mais.
 
 <div align="center">
   <img src="https://i.imgur.com/wRipSZq.png" alt="Menu de Restore" width="50%">
@@ -86,42 +91,50 @@ O **CalyRecall** foi configurado para "congelar" o estado das seguintes pastas c
 
 ⚠️ **Pré-requisito:** Tenha o [Millennium](https://steambrew.app/) instalado.
 
-### ⚡ Método Recomendado (Automático)
-Instale em segundos sem precisar baixar arquivos manualmente.
+### ⚡ Método Recomendado (Instalador Oficial)
+A forma mais fácil, bonita e segura de instalar.
 
-1. Pressione a tecla `Windows` e digite **PowerShell**.
-2. Clique com o botão direito no ícone e selecione **"Executar como Administrador"**.
-3. Copie e cole o comando abaixo e aperte `Enter`:
+1. Vá até a aba **Releases** aqui no GitHub.
+2. Baixe o arquivo `calyrecall-installer.exe`.
+3. Execute o arquivo.
+4. Siga os passos na tela e clique em **INSTALAR** e configure sua instalação.
+   *(O instalador fechará a Steam automaticamente para garantir uma instalação limpa).*
 
-```powershell
-irm https://raw.githubusercontent.com/BruxinCore/CalyRecall/refs/heads/main/install.ps1 | iex
+<div align="center">
+  <img src="https://i.imgur.com/ihobPo8.png" alt="Preview Tela Inicial" width="45%">
+  <img src="https://i.imgur.com/dOWCLwh.png" alt="Preview Instalação Personalizada" width="45%">
+</div>
 
-```
+### ⚙️ Instalação Personalizada
+O instalador do CalyRecall é inteligente e permite flexibilidade total:
 
-### 🛠️ Método Manual
+* **Steam em outro local?** O instalador tenta detectar sua Steam automaticamente. Caso você tenha instalado a Steam em um HD secundário (ex: `D:\Games\Steam`), você pode selecionar a pasta correta manualmente clicando no ícone de pasta 📂.
 
-1. Baixe a última versão do **CalyRecall**.
+* **Pasta de Backups Personalizada:**
+  Por padrão, os backups ficam dentro da pasta do plugin. Se você tem pouco espaço no disco principal ou prefere salvar seus saves em outro lugar (como uma nuvem ou HD externo), você pode escolher uma **Pasta de Backup Personalizada** durante a instalação.
+
+---
+
+### 🛠️ Método Manual (Avançado)
+
+Caso prefira não usar o instalador:
+
+1. Baixe a última versão do código fonte (ZIP).
 2. Extraia a pasta `CalyRecall` para dentro do diretório de plugins:
-
-```bash
-C:\Program Files (x86)\Steam\plugins\
-
-```
-
-*(Nota: Certifique-se de que a pasta se chama apenas `CalyRecall`)*
-
+   `.../Steam/plugins/CalyRecall`
 3. Reinicie a Steam.
 
 ---
 
 ## 📂 Onde ficam meus backups?
 
-Todos os snapshots são armazenados localmente em:
+Se você usou a instalação padrão, seus snapshots ficam seguros dentro da pasta do plugin:
 
 ```text
 Steam/
-└── millennium/
-    └── backups/
-        ├── CalyBackup-2026-01-24_14-30-00/
-        ├── CalyBackup-2026-01-24_18-45-12/
-        └── ...
+└── plugins/
+    └── CalyRecall/
+        └── backups/
+            ├── CalyBackup-2026-01-24_14-30-00/
+            ├── CalyBackup-2026-01-24_18-45-12/
+            └── ...
