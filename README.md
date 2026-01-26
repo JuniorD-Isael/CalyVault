@@ -30,10 +30,11 @@ Agora com o novo sistema de <strong>Restore</strong>, você pode reverter para q
 
 | Recurso | Descrição |
 | :--- | :--- |
+| 🎮 **Game Awareness** | Identifica automaticamente qual jogo foi fechado, exibindo o **Nome** e a **Capa** na lista de backups. |
 | 🕵️ **Monitoramento Passivo** | Detecta automaticamente o encerramento de processos de jogos (AppID). Zero impacto na performance. |
 | 📦 **Backup Cirúrgico** | Salva apenas o que importa (userdata, stats, cache, configs), ignorando o "lixo" temporário. |
 | 🔄 **Time Travel (Restore)** | Restaure backups antigos instantaneamente através de uma interface visual integrada. |
-| ✏️ **Gerenciamento Total** | **Novo!** Renomeie backups (ex: "Antes do Boss") ou delete snapshots antigos direto na interface. |
+| ✏️ **Gerenciamento Total** | Renomeie backups (ex: "Antes do Boss") ou delete snapshots antigos direto na interface. |
 | 🔔 **Notificações Nativas** | Feedback visual discreto via Windows Toast ao concluir operações. |
 | 🗃️ **Histórico Organizado** | Cria pastas timestamped para você voltar no tempo quando quiser. |
 
@@ -51,7 +52,7 @@ No canto inferior direito da sua Steam, procure pelo **Botão Roxo com Ícone de
 </div>
 
 ### 2. Gerenciamento Visual
-Ao clicar, uma lista com todos os seus backups aparecerá. 
+Ao clicar, uma lista com todos os seus backups aparecerá, agora com os ícones dos jogos!
 * **Restaurar:** Clique no botão grande para voltar no tempo.
 * **Renomear (✏️):** Dê apelidos aos seus backups para lembrar de momentos importantes.
 * **Deletar (🗑️):** Remova backups que não precisa mais.
