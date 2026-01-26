@@ -58,7 +58,7 @@ Ao clicar, uma lista com todos os seus backups aparecerá, agora com os ícones 
 * **Deletar (🗑️):** Remova backups que não precisa mais.
 
 <div align="center">
-  <img src="https://i.imgur.com/wRipSZq.png" alt="Menu de Restore" width="50%">
+  <img src="https://i.imgur.com/w3NpTcM.png" alt="Menu de Restore" width="50%">
 </div>
 
 ### 3. Confirmação Visual
