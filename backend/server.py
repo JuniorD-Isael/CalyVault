@@ -2,7 +2,8 @@ import os
 import json
 import threading
 import urllib.parse
-import sys
+import subprocess
+import shutil
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from config import BACKUP_ROOT, SERVER_PORT, STEAM_PATH
 
@@ -10,8 +11,8 @@ class CalyRequestHandler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200, "ok")
         self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header("Access-Control-Allow-Headers", "X-Requested-With")
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS')
+        self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type")
         self.end_headers()
 
     def do_GET(self):
@@ -26,7 +27,7 @@ class CalyRequestHandler(BaseHTTPRequestHandler):
 
             if os.path.exists(flag_file):
                 was_restored = True
-                try: os.remove(flag_file)
+                try: os.remove(flag_file) 
                 except: pass
             
             self.wfile.write(json.dumps({"restored": was_restored}).encode())
@@ -40,8 +41,23 @@ class CalyRequestHandler(BaseHTTPRequestHandler):
             backups = []
             if os.path.exists(BACKUP_ROOT):
                 try:
-                    backups = [d for d in os.listdir(BACKUP_ROOT) if os.path.isdir(os.path.join(BACKUP_ROOT, d)) and d.startswith("CalyBackup")]
-                    backups.sort()
+                    dirs = [d for d in os.listdir(BACKUP_ROOT) if os.path.isdir(os.path.join(BACKUP_ROOT, d)) and d.startswith("CalyBackup")]
+                    dirs.sort(reverse=True)
+
+                    for d in dirs:
+                        meta_path = os.path.join(BACKUP_ROOT, d, "caly_meta.json")
+                        display_name = None
+                        if os.path.exists(meta_path):
+                            try:
+                                with open(meta_path, 'r', encoding='utf-8') as f:
+                                    data = json.load(f)
+                                    display_name = data.get("name")
+                            except: pass
+
+                        backups.append({
+                            "folder": d,
+                            "nickname": display_name
+                        })
                 except: pass
             
             self.wfile.write(json.dumps(backups).encode())
@@ -50,18 +66,57 @@ class CalyRequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
 
     def do_POST(self):
+        content_length = int(self.headers.get('Content-Length', 0))
+        post_data = self.rfile.read(content_length).decode('utf-8') if content_length > 0 else ""
+
         if self.path.startswith('/restore/'):
             backup_name = self.path.replace('/restore/', '')
             backup_name = urllib.parse.unquote(backup_name)
             
-            print(f"[CalyServer] COMANDO RECEBIDO: Restaurar {backup_name}")
-            
+            print(f"[CalyServer] COMANDO: Restaurar {backup_name}")
             self.send_response(200)
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             self.wfile.write(b'{"status": "accepted"}')
-
             threading.Thread(target=trigger_external_restore, args=(backup_name,), daemon=True).start()
+
+        elif self.path.startswith('/delete/'):
+            backup_name = self.path.replace('/delete/', '')
+            backup_name = urllib.parse.unquote(backup_name)
+            target_path = os.path.join(BACKUP_ROOT, backup_name)
+
+            if os.path.exists(target_path) and os.path.isdir(target_path):
+                try:
+                    shutil.rmtree(target_path)
+                    self.send_response(200)
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(b'{"status": "deleted"}')
+                except: self.send_error(500)
+            else:
+                self.send_error(404)
+
+        elif self.path.startswith('/rename'):
+            try:
+                data = json.loads(post_data)
+                folder = data.get("folder")
+                new_name = data.get("new_name")
+                
+                if folder:
+                    meta_path = os.path.join(BACKUP_ROOT, folder, "caly_meta.json")
+                    if new_name and str(new_name).strip():
+                        with open(meta_path, 'w', encoding='utf-8') as f:
+                            json.dump({"name": new_name}, f)
+                    else:
+                        if os.path.exists(meta_path): os.remove(meta_path)
+                    
+                    self.send_response(200)
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(b'{"status": "renamed"}')
+                else:
+                    self.send_error(400)
+            except: self.send_error(500)
 
     def log_message(self, format, *args): return
 
@@ -71,33 +126,11 @@ def trigger_external_restore(backup_folder_name):
     temp_bat = os.path.join(os.environ["TEMP"], "caly_restore.bat")
     flag_file = os.path.join(BACKUP_ROOT, "restore_success.flag")
 
-    print(f"[CalyServer] Gerando script AUTO-ELEVAVEL em: {temp_bat}")
-
     bat_content = [
         "@echo off",
-        "title CalyRecall - Verificando Permissoes...",
+        "title CalyRecall - Restaurando...",
         "color 0D",
         "cls",
-        "",
-        ":: --- BLOC DE AUTO-ELEVACAO (VBS METHOD) ---",
-        "net session >nul 2>&1",
-        "if %errorLevel% == 0 (",
-        "    goto :gotAdmin",
-        ") else (",
-        "    echo Solicitando Permissao de Administrador...",
-        "    echo Set UAC = CreateObject^(\"Shell.Application\"^) > \"%temp%\\getadmin.vbs\"",
-        "    echo UAC.ShellExecute \"%~s0\", \"\", \"\", \"runas\", 1 >> \"%temp%\\getadmin.vbs\"",
-        "    \"%temp%\\getadmin.vbs\"",
-        "    exit /B",
-        ")",
-        "",
-        ":: --- INICIO DO PROCESSO REAL ---",
-        ":gotAdmin",
-        "if exist \"%temp%\\getadmin.vbs\" ( del \"%temp%\\getadmin.vbs\" )",
-        "pushd \"%CD%\"",
-        "CD /D \"%~dp0\"",
-        "",
-        "title CalyRecall - RESTAURANDO...",
         "echo.",
         "echo  =========================================",
         "echo      CALYRECALL - PROTOCOLO DE RESTAURO",
@@ -114,16 +147,9 @@ def trigger_external_restore(backup_folder_name):
         f'set "BACKUP={backup_src}"',
         f'set "STEAM={STEAM_PATH}"',
         "",
-        'echo    -> Userdata',
         'xcopy "%BACKUP%\\userdata\\*" "%STEAM%\\userdata\\" /E /H /C /I /Y /Q >nul 2>&1',
-        "",
-        'echo    -> Stats',
         'xcopy "%BACKUP%\\appcache_stats\\*" "%STEAM%\\appcache\\stats\\" /E /H /C /I /Y /Q >nul 2>&1',
-        "",
-        'echo    -> Depotcache',
         'xcopy "%BACKUP%\\depotcache\\*" "%STEAM%\\depotcache\\" /E /H /C /I /Y /Q >nul 2>&1',
-        "",
-        'echo    -> Configs',
         'xcopy "%BACKUP%\\stplug-in\\*" "%STEAM%\\config\\stplug-in\\" /E /H /C /I /Y /Q >nul 2>&1',
         "",
         "echo  [4/4] Finalizando...",
@@ -136,12 +162,8 @@ def trigger_external_restore(backup_folder_name):
     try:
         with open(temp_bat, "w") as f:
             f.write("\n".join(bat_content))
-        
-        print("[CalyServer] Executing BAT via os.startfile...")
-        os.startfile(temp_bat)
-        
-    except Exception as e:
-        print(f"[CalyServer] ERRO AO LANÇAR BAT: {e}")
+        subprocess.Popen([temp_bat], creationflags=subprocess.CREATE_NEW_CONSOLE)
+    except: pass
 
 def start_server():
     server_address = ('127.0.0.1', SERVER_PORT)

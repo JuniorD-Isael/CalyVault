@@ -3,14 +3,12 @@ import Millennium
 import threading
 import sys
 
-# Garante que o Python enxergue os outros arquivos da pasta backend
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
 from monitor import BackupManager
 from server import start_server
 
 def find_plugin_root():
-    """Busca a raiz do plugin subindo diretórios."""
     current = os.path.abspath(__file__)
     for _ in range(4):
         current = os.path.dirname(current)
@@ -24,7 +22,6 @@ class Plugin:
 
     def _load(self):
         print("[CalyRecall] Carregando plugin...")
-
         
         plugin_root = find_plugin_root()
         js_path = os.path.join(plugin_root, "public", "index.js")

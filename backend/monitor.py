@@ -26,10 +26,15 @@ class BackupManager(threading.Thread):
     def perform_backup(self, appid):
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         folder_name = f"CalyBackup-{timestamp}"
+        
         dest_folder = os.path.join(BACKUP_ROOT, folder_name)
         
         success_count = 0
         print(f"[CalyRecall] Iniciando backup em: {dest_folder}")
+
+        if not os.path.exists(BACKUP_ROOT):
+            try: os.makedirs(BACKUP_ROOT)
+            except: pass
 
         for target in BACKUP_TARGETS:
             src = target["src"]
@@ -50,7 +55,7 @@ class BackupManager(threading.Thread):
                 print(f"[CalyRecall] Erro ao copiar {target['name']}: {e}")
 
         if success_count > 0:
-            show_notification("CalyRecall", f"CalyBackup realizado com sucesso.")
+            show_notification("CalyRecall", f"Backup realizado com sucesso.")
 
     def stop(self):
         self.running = False
