@@ -48,7 +48,7 @@ O CalyRecall agora possui uma interface visual dedicada. Veja como é simples vo
 No canto inferior direito da sua Steam, procure pelo **Botão Roxo com Ícone de Relógio**. Ele é o seu portal para os backups.
 
 <div align="center">
-  <img src="https://i.imgur.com/gReSM17.png" alt="Botão CalyRecall" width="35%">
+  <img src="https://i.imgur.com/w3NpTcM.png" alt="Botão CalyRecall" width="35%">
 </div>
 
 ### 2. Gerenciamento Visual
