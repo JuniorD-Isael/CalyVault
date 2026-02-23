@@ -3,8 +3,6 @@ import time
 import shutil
 import winreg
 import threading
-import urllib.request
-import json
 from datetime import datetime
 from config import BACKUP_ROOT, BACKUP_TARGETS
 from ui import show_notification
@@ -25,33 +23,18 @@ class BackupManager(threading.Thread):
         except:
             return 0
 
-    def get_game_name(self, appid):
-        if not appid or appid == 0:
-            return "Steam Session"
-        try:
-            url = f"https://store.steampowered.com/api/appdetails?appids={appid}&filters=basic"
-            with urllib.request.urlopen(url, timeout=5) as response:
-                data = json.loads(response.read().decode())
-                if str(appid) in data and data[str(appid)]['success']:
-                    return data[str(appid)]['data']['name']
-        except: pass
-        return f"AppID {appid}"
-
     def perform_backup(self, appid):
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         folder_name = f"CalyBackup-{timestamp}"
         dest_folder = os.path.join(BACKUP_ROOT, folder_name)
+        
         success_count = 0
-        game_name = self.get_game_name(appid)
-        print(f"[CalyRecall] Iniciando backup de '{game_name}' em: {dest_folder}")
-
-        if not os.path.exists(BACKUP_ROOT):
-            try: os.makedirs(BACKUP_ROOT)
-            except: pass
+        print(f"[CalyRecall] Iniciando backup em: {dest_folder}")
 
         for target in BACKUP_TARGETS:
             src = target["src"]
             dst = os.path.join(dest_folder, target["name"])
+            
             try:
                 if os.path.exists(src):
                     if os.path.isdir(src):
@@ -59,36 +42,32 @@ class BackupManager(threading.Thread):
                     else:
                         os.makedirs(os.path.dirname(dst), exist_ok=True)
                         shutil.copy2(src, dst)
+                    
                     success_count += 1
+                else:
+                    print(f"[CalyRecall] ALERTA: Pasta não encontrada: {src}")
             except Exception as e:
                 print(f"[CalyRecall] Erro ao copiar {target['name']}: {e}")
 
         if success_count > 0:
-            try:
-                meta = {
-                    "appid": appid,
-                    "game_name": game_name,
-                    "nickname": None,
-                    "timestamp": timestamp
-                }
-                with open(os.path.join(dest_folder, "caly_meta.json"), "w", encoding='utf-8') as f:
-                    json.dump(meta, f, ensure_ascii=False)
-            except: pass
-            show_notification("CalyRecall", f"Backup de {game_name} concluído.")
+            show_notification("CalyRecall", f"CalyBackup realizado com sucesso.")
 
     def stop(self):
         self.running = False
 
     def run(self):
-        print("[CalyRecall] Monitor ativo (Game Awareness ON).")
+        print("[CalyRecall] Monitor ativo.")
         while self.running:
             current_appid = self.get_running_appid()
+
             if self.was_running and current_appid == 0:
                 print("[CalyRecall] Jogo fechado. Iniciando protocolo de backup...")
                 time.sleep(5) 
                 self.perform_backup(self.last_appid)
                 self.was_running = False
+            
             elif current_appid > 0:
                 self.was_running = True
                 self.last_appid = current_appid
+
             time.sleep(2)

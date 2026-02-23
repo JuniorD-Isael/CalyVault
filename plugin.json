@@ -1,10 +1,7 @@
 {
-  "name": "CalyRecall",
+  "name": "calyrecall",
   "common_name": "CalyRecall",
-  "description": "Automação de Backup e Restore Inteligente para Steam",
+  "description": "Backup automatizado de Userdata, Stats e Configs ao fechar jogos.",
   "author": "BruxinCore",
-  "version": "2.1.0",
-  "include": [
-    "public"
-  ]
+  "version": "1.0.0"
 }
