@@ -10,14 +10,11 @@ import shutil
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from config import BACKUP_ROOT, SERVER_PORT, STEAM_PATH
 
-# --- Segurança: origens permitidas (VULN-04) ---
 _ALLOWED_ORIGINS = {
-    # Steam store / community (CEF embarcado no client)
     'https://store.steampowered.com',
     'https://steamcommunity.com',
     'https://cdn.akamai.steamstatic.com',
     'https://shared.akamai.steamstatic.com',
-    # Steam client UI interna (Chromium Embedded Framework)
     'https://steamloopback.host',
     'http://steamloopback.host',
 }
@@ -27,8 +24,8 @@ def _cors_origin(headers) -> str:
     Retorna o valor correto para o header Access-Control-Allow-Origin.
 
     Casos:
-      - Sem header Origin (requisição não-browser / Millennium injected):
-        retorna '*' — seguro pois já estamos em 127.0.0.1
+      - Sem header Origin (requisição não-browser / curl / Millennium direto):
+        retorna '' — CORS é irrelevante sem Origin, header não será enviado
       - Origin: null (CEF injection context do Millennium):
         retorna 'null' — browsers aceitam este match exato
       - Origin na whitelist Steam:
@@ -38,9 +35,9 @@ def _cors_origin(headers) -> str:
     """
     origin = headers.get('Origin', '')
     if not origin:
-        return '*'          # cliente local sem CORS (curl, Millennium direto)
+        return ''
     if origin == 'null':
-        return 'null'       # script injetado pelo Millennium via CEF
+        return 'null'
     return origin if origin in _ALLOWED_ORIGINS else ''
 
 def safe_backup_path(name: str) -> pathlib.Path:
@@ -117,7 +114,7 @@ class CalyRequestHandler(BaseHTTPRequestHandler):
         post_data = self.rfile.read(content_length).decode('utf-8') if content_length > 0 else ""
         if self.path.startswith('/restore/'):
             backup_name = self.path.replace('/restore/', '')
-            backup_name = os.path.basename(urllib.parse.unquote(backup_name))  # strip traversal
+            backup_name = os.path.basename(urllib.parse.unquote(backup_name))
             try:
                 safe_backup_path(backup_name)
             except ValueError:
@@ -132,7 +129,7 @@ class CalyRequestHandler(BaseHTTPRequestHandler):
             threading.Thread(target=trigger_external_restore, args=(backup_name,), daemon=True).start()
         elif self.path.startswith('/delete/'):
             backup_name = self.path.replace('/delete/', '')
-            backup_name = os.path.basename(urllib.parse.unquote(backup_name))  # strip traversal
+            backup_name = os.path.basename(urllib.parse.unquote(backup_name))
             try:
                 target_path = safe_backup_path(backup_name)
             except ValueError:
@@ -153,7 +150,7 @@ class CalyRequestHandler(BaseHTTPRequestHandler):
         elif self.path.startswith('/rename'):
             try:
                 data = json.loads(post_data)
-                folder = os.path.basename(data.get("folder") or "")  # strip traversal
+                folder = os.path.basename(data.get("folder") or "")
                 new_nickname = data.get("new_name")
                 if folder:
                     try:

@@ -1,7 +1,6 @@
 (function() {
     'use strict';
     const API_URL = "http://localhost:9999";
-    // --- Segurança: escapa conteúdo antes de injetar no DOM (VULN-05) ---
     function sanitize(str) {
         if (str === null || str === undefined) return '';
         const div = document.createElement('div');
@@ -182,7 +181,6 @@
                 if (!nickname && !data.game_name) mainText = "Backup Automático";
                 let subText = dateStr;
                 if (nickname) subText += ` • ${gameName}`;
-                // Estrutura estática via innerHTML — zero dados remotos aqui (VULN-05)
                 item.innerHTML = `
                     <div class="caly-info">
                         <span class="caly-main-text"></span>
@@ -201,10 +199,8 @@
                         </button>
                     </div>
                 `;
-                // Dados remotos injetados exclusivamente via textContent — impossível executar HTML
                 item.querySelector('.caly-main-text').textContent = mainText;
                 item.querySelector('.caly-sub-text').textContent = subText;
-                // Imagem construída via DOM API — atributo src nunca passa por innerHTML
                 if (appid && appid !== 0 && /^\d+$/.test(String(appid))) {
                     const img = document.createElement('img');
                     img.src = `https://cdn.cloudflare.steamstatic.com/steam/apps/${appid}/capsule_sm_120.jpg`;

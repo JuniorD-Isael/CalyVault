@@ -32,7 +32,7 @@ class BackupManager(threading.Thread):
                 d for d in os.listdir(BACKUP_ROOT)
                 if os.path.isdir(os.path.join(BACKUP_ROOT, d)) and d.startswith("CalyBackup")
             ]
-            entries.sort()  # ordem lexicográfica = ordem cronológica (YYYY-MM-DD_HH-MM-SS)
+            entries.sort()
             while len(entries) >= MAX_BACKUPS:
                 oldest = entries.pop(0)
                 oldest_path = os.path.join(BACKUP_ROOT, oldest)
@@ -42,7 +42,7 @@ class BackupManager(threading.Thread):
             print(f"[CalyRecall] Erro na rotação de backups: {e}")
 
     def perform_backup(self, appid):
-        self.rotate_backups()  # garante que o limite de MAX_BACKUPS seja respeitado
+        self.rotate_backups()
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         folder_name = f"CalyBackup-{timestamp}"
         dest_folder = os.path.join(BACKUP_ROOT, folder_name)

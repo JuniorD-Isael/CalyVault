@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🟣 CalyRecall 🟣 
+# 🟣 CalyRecall 🟣
 
 **Automação de Backup e Restauração Inteligente para Steam (Millennium)**
 
@@ -8,7 +8,8 @@
 [![Python](https://img.shields.io/badge/Backend-Python-ffe800?style=for-the-badge&logo=python&logoColor=black)](https://www.python.org/)
 [![Discord](https://img.shields.io/badge/Community-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/DQYxmFaywK)
 [![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)]()
-[![License](https://img.shields.io/badge/License-CSAL-red?style=for-the-badge)](LICENSE)
+[![License](https://img.shields.io/badge/License-CSAL-red?style=for-the-badge)](license)
+[![Fork](https://img.shields.io/badge/Fork-BruxinCore%2FCalyRecall-8b5cf6?style=for-the-badge&logo=github)](https://github.com/BruxinCore/CalyRecall)
 
 <p align="center">
   <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3BxdGp6Z3V4ZnV4ZnV4ZnV4ZnV4ZnV4ZnV4ZnV4ZnV4ZnV4eiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/LMcB8XjhG7ck/giphy.gif" width="100%" height="4" alt="divider">
@@ -26,6 +27,42 @@ Agora com o novo sistema de <strong>Restore</strong>, você pode reverter para q
 
 ---
 
+## ⚠️ Fork — Créditos ao Projeto Original
+
+> Este repositório é um **fork independente** do projeto original [CalyRecall](https://github.com/BruxinCore/CalyRecall), criado por **[BruxinCore](https://github.com/BruxinCore)**.
+>
+> Todo o conceito, design visual, arquitetura e código-base original pertencem exclusivamente ao autor original. Este fork existe para experimentação técnica com foco em hardening de segurança e não substitui nem concorre com o projeto upstream.
+>
+> Se você quer o CalyRecall oficial e suportado pelo criador, **vá ao repositório original:**
+> **👉 [github.com/BruxinCore/CalyRecall](https://github.com/BruxinCore/CalyRecall)**
+
+---
+
+## 🔐 O que foi alterado neste fork
+
+Este fork focou exclusivamente em **hardening de segurança** e na adição de **rotação automática de backups**. Nenhuma funcionalidade core foi removida ou alterada.
+
+| Área | Alteração |
+| :--- | :--- |
+| **CORS** | Substituído wildcard `*` por lista de permissões explícita (Steam origins + CEF `null`) |
+| **Path Traversal** | Dupla camada: `os.path.basename()` na borda HTTP + `safe_backup_path()` com `Path.relative_to()` |
+| **Command Injection** | `%TEMP%` substituído por `tempfile.mkdtemp()` para criação segura de diretório temporário |
+| **DOM XSS** | Dados remotos movidos para `textContent`; imagens construídas via DOM API; `appid` validado por regex |
+| **Rotação de Backups** | Limite configurável `MAX_BACKUPS = 4`; o mais antigo é deletado automaticamente antes de cada novo backup |
+| **Documentação** | Adicionados `DOCS.md` (EN) e `DOCS.pt-BR.md` (PT-BR) com documentação técnica completa |
+
+---
+
+## 📄 Documentação Técnica
+
+| Arquivo | Idioma | Conteúdo |
+| :--- | :--- | :--- |
+| [DOCS.md](DOCS.md) | 🇺🇸 English | Full module reference, REST API, security model, architecture diagrams |
+| [DOCS.pt-BR.md](DOCS.pt-BR.md) | 🇧🇷 Português | Referência completa de módulos, API REST, modelo de segurança, diagramas |
+| [SECURITY_REPORT.md](SECURITY_REPORT.md) | 🇧🇷 Português | Relatório de pentest — VULN-01 a VULN-05 com PoC, impacto e remediação |
+
+---
+
 ## ⚡ Funcionalidades
 
 | Recurso | Descrição |
@@ -37,6 +74,7 @@ Agora com o novo sistema de <strong>Restore</strong>, você pode reverter para q
 | ✏️ **Gerenciamento Total** | Renomeie backups (ex: "Antes do Boss") ou delete snapshots antigos direto na interface. |
 | 🔔 **Notificações Nativas** | Feedback visual discreto via Windows Toast ao concluir operações. |
 | 🗃️ **Histórico Organizado** | Cria pastas timestamped para você voltar no tempo quando quiser. |
+| 🔁 **Rotação Automática** | Mantém no máximo `MAX_BACKUPS` snapshots; o mais antigo é deletado automaticamente. |
 
 ---
 
@@ -92,50 +130,42 @@ O **CalyRecall** foi configurado para "congelar" o estado das seguintes pastas c
 
 ⚠️ **Pré-requisito:** Tenha o [Millennium](https://steambrew.app/) instalado.
 
-### ⚡ Método Recomendado (Instalador Oficial)
-A forma mais fácil, bonita e segura de instalar.
+> **Nota:** Este é um fork focado em segurança. Para o instalador oficial e releases, use o **[repositório original](https://github.com/BruxinCore/CalyRecall)**.
 
-1. Vá até a aba **Releases** aqui no GitHub.
-2. Baixe o arquivo `calyrecall-installer.exe`.
-3. Execute o arquivo.
-4. Siga os passos na tela e clique em **INSTALAR** e configure sua instalação.
-   *(O instalador fechará a Steam automaticamente para garantir uma instalação limpa).*
+### 🛠️ Instalação Manual
 
-<div align="center">
-  <img src="https://i.imgur.com/ihobPo8.png" alt="Preview Tela Inicial" width="45%">
-  <img src="https://i.imgur.com/dOWCLwh.png" alt="Preview Instalação Personalizada" width="45%">
-</div>
-
-### ⚙️ Instalação Personalizada
-O instalador do CalyRecall é inteligente e permite flexibilidade total:
-
-* **Steam em outro local?** O instalador tenta detectar sua Steam automaticamente. Caso você tenha instalado a Steam em um HD/SSD secundário (ex: `D:\Games\Steam`), você pode selecionar a pasta correta manualmente clicando no ícone de pasta 📂.
-
-* **Pasta de Backups Personalizada:**
-  Por padrão, os backups ficam dentro da pasta do plugin. Se você tem pouco espaço no disco principal ou prefere salvar seus saves em outro lugar (como uma nuvem ou HD/SSD externo), você pode escolher uma **Pasta de Backup Personalizada** durante a instalação.
-
----
-
-### 🛠️ Método Manual (Avançado)
-
-Caso prefira não usar o instalador:
-
-1. Baixe a última versão do código fonte (ZIP).
-2. Extraia a pasta `CalyRecall` para dentro do diretório de plugins:
-   `.../Steam/plugins/CalyRecall`
+1. Baixe a última versão do código-fonte (ZIP) ou clone este repositório.
+2. Extraia a pasta `CalyRecall` para dentro do diretório de plugins da Steam:
+   ```
+   .../Steam/plugins/CalyRecall
+   ```
 3. Reinicie a Steam.
 
 ---
 
 ## 📂 Onde ficam meus backups?
 
-Se você usou a instalação padrão, seus snapshots ficam seguros dentro da pasta do plugin:
+Os snapshots ficam dentro da pasta do Millennium:
 
 ```text
 Steam/
-└── plugins/
-    └── CalyRecall/
-        └── backups/
-            ├── CalyBackup-2026-01-24_14-30-00/
-            ├── CalyBackup-2026-01-24_18-45-12/
-            └── ...
+└── millennium/
+    └── backups/
+        ├── CalyBackup-2026-01-24_14-30-00/
+        ├── CalyBackup-2026-01-24_18-45-12/
+        └── ...
+```
+
+O limite padrão é **4 backups**. Ao criar um novo, o mais antigo é deletado automaticamente. Para alterar o limite, edite `MAX_BACKUPS` em `backend/config.py`.
+
+---
+
+## 👤 Créditos
+
+| Papel | Pessoa |
+| :--- | :--- |
+| **Criador original** | [BruxinCore](https://github.com/BruxinCore) |
+| **Repositório original** | [github.com/BruxinCore/CalyRecall](https://github.com/BruxinCore/CalyRecall) |
+| **Hardening de segurança (este fork)** | JuniorD-Isael |
+
+Todo o mérito pelo conceito e implementação original é de **BruxinCore**.

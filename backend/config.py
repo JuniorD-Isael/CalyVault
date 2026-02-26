@@ -12,7 +12,7 @@ def get_steam_path():
 
 STEAM_PATH = get_steam_path()
 BACKUP_ROOT = os.path.join(STEAM_PATH, "millennium", "backups")
-MAX_BACKUPS = 4  # número máximo de backups retidos (o mais antigo é deletado ao ultrapassar)
+MAX_BACKUPS = 4
 
 BACKUP_TARGETS = [
     {"src": os.path.join(STEAM_PATH, "userdata"), "name": "userdata"},
