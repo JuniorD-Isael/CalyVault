@@ -4,7 +4,7 @@ import shutil
 import winreg
 import threading
 from datetime import datetime
-from config import BACKUP_ROOT, BACKUP_TARGETS
+from config import BACKUP_ROOT, BACKUP_TARGETS, MAX_BACKUPS
 from ui import show_notification
 
 class BackupManager(threading.Thread):
@@ -23,7 +23,26 @@ class BackupManager(threading.Thread):
         except:
             return 0
 
+    def rotate_backups(self):
+        """Remove os backups mais antigos quando o limite MAX_BACKUPS é atingido."""
+        if not os.path.exists(BACKUP_ROOT):
+            return
+        try:
+            entries = [
+                d for d in os.listdir(BACKUP_ROOT)
+                if os.path.isdir(os.path.join(BACKUP_ROOT, d)) and d.startswith("CalyBackup")
+            ]
+            entries.sort()  # ordem lexicográfica = ordem cronológica (YYYY-MM-DD_HH-MM-SS)
+            while len(entries) >= MAX_BACKUPS:
+                oldest = entries.pop(0)
+                oldest_path = os.path.join(BACKUP_ROOT, oldest)
+                print(f"[CalyRecall] Limite atingido. Deletando backup antigo: {oldest}")
+                shutil.rmtree(oldest_path, ignore_errors=True)
+        except Exception as e:
+            print(f"[CalyRecall] Erro na rotação de backups: {e}")
+
     def perform_backup(self, appid):
+        self.rotate_backups()  # garante que o limite de MAX_BACKUPS seja respeitado
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         folder_name = f"CalyBackup-{timestamp}"
         dest_folder = os.path.join(BACKUP_ROOT, folder_name)

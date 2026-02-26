@@ -1,5 +1,8 @@
 import os
 import json
+import pathlib
+import secrets
+import tempfile
 import threading
 import urllib.parse
 import subprocess
@@ -7,10 +10,55 @@ import shutil
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from config import BACKUP_ROOT, SERVER_PORT, STEAM_PATH
 
+# --- Segurança: origens permitidas (VULN-04) ---
+_ALLOWED_ORIGINS = {
+    # Steam store / community (CEF embarcado no client)
+    'https://store.steampowered.com',
+    'https://steamcommunity.com',
+    'https://cdn.akamai.steamstatic.com',
+    'https://shared.akamai.steamstatic.com',
+    # Steam client UI interna (Chromium Embedded Framework)
+    'https://steamloopback.host',
+    'http://steamloopback.host',
+}
+
+def _cors_origin(headers) -> str:
+    """
+    Retorna o valor correto para o header Access-Control-Allow-Origin.
+
+    Casos:
+      - Sem header Origin (requisição não-browser / Millennium injected):
+        retorna '*' — seguro pois já estamos em 127.0.0.1
+      - Origin: null (CEF injection context do Millennium):
+        retorna 'null' — browsers aceitam este match exato
+      - Origin na whitelist Steam:
+        retorna a própria origem
+      - Origem desconhecida:
+        retorna '' → header não é enviado → browser bloqueia a resposta
+    """
+    origin = headers.get('Origin', '')
+    if not origin:
+        return '*'          # cliente local sem CORS (curl, Millennium direto)
+    if origin == 'null':
+        return 'null'       # script injetado pelo Millennium via CEF
+    return origin if origin in _ALLOWED_ORIGINS else ''
+
+def safe_backup_path(name: str) -> pathlib.Path:
+    """Garante que o caminho resultante está contido em BACKUP_ROOT (previne Path Traversal)."""
+    root = pathlib.Path(BACKUP_ROOT).resolve()
+    resolved = (root / name).resolve()
+    try:
+        resolved.relative_to(root)
+    except ValueError:
+        raise ValueError(f"Path Traversal bloqueado: {name!r}")
+    return resolved
+
 class CalyRequestHandler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200, "ok")
-        self.send_header('Access-Control-Allow-Origin', '*')
+        origin = _cors_origin(self.headers)
+        if origin:
+            self.send_header('Access-Control-Allow-Origin', origin)
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS')
         self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type")
         self.end_headers()
@@ -19,7 +67,9 @@ class CalyRequestHandler(BaseHTTPRequestHandler):
         if self.path == '/check_restore':
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
+            origin = _cors_origin(self.headers)
+            if origin:
+                self.send_header('Access-Control-Allow-Origin', origin)
             self.end_headers()
             flag_file = os.path.join(BACKUP_ROOT, "restore_success.flag")
             was_restored = False
@@ -32,7 +82,9 @@ class CalyRequestHandler(BaseHTTPRequestHandler):
         elif self.path == '/list':
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
+            origin = _cors_origin(self.headers)
+            if origin:
+                self.send_header('Access-Control-Allow-Origin', origin)
             self.end_headers()
             backups = []
             if os.path.exists(BACKUP_ROOT):
@@ -65,21 +117,34 @@ class CalyRequestHandler(BaseHTTPRequestHandler):
         post_data = self.rfile.read(content_length).decode('utf-8') if content_length > 0 else ""
         if self.path.startswith('/restore/'):
             backup_name = self.path.replace('/restore/', '')
-            backup_name = urllib.parse.unquote(backup_name)
+            backup_name = os.path.basename(urllib.parse.unquote(backup_name))  # strip traversal
+            try:
+                safe_backup_path(backup_name)
+            except ValueError:
+                self.send_error(400, "Invalid backup name")
+                return
             self.send_response(200)
-            self.send_header('Access-Control-Allow-Origin', '*')
+            origin = _cors_origin(self.headers)
+            if origin:
+                self.send_header('Access-Control-Allow-Origin', origin)
             self.end_headers()
             self.wfile.write(b'{"status": "accepted"}')
             threading.Thread(target=trigger_external_restore, args=(backup_name,), daemon=True).start()
         elif self.path.startswith('/delete/'):
             backup_name = self.path.replace('/delete/', '')
-            backup_name = urllib.parse.unquote(backup_name)
-            target_path = os.path.join(BACKUP_ROOT, backup_name)
-            if os.path.exists(target_path) and os.path.isdir(target_path):
+            backup_name = os.path.basename(urllib.parse.unquote(backup_name))  # strip traversal
+            try:
+                target_path = safe_backup_path(backup_name)
+            except ValueError:
+                self.send_error(400, "Invalid backup name")
+                return
+            if target_path.exists() and target_path.is_dir():
                 try:
                     shutil.rmtree(target_path)
                     self.send_response(200)
-                    self.send_header('Access-Control-Allow-Origin', '*')
+                    origin = _cors_origin(self.headers)
+                    if origin:
+                        self.send_header('Access-Control-Allow-Origin', origin)
                     self.end_headers()
                     self.wfile.write(b'{"status": "deleted"}')
                 except: self.send_error(500)
@@ -88,12 +153,17 @@ class CalyRequestHandler(BaseHTTPRequestHandler):
         elif self.path.startswith('/rename'):
             try:
                 data = json.loads(post_data)
-                folder = data.get("folder")
+                folder = os.path.basename(data.get("folder") or "")  # strip traversal
                 new_nickname = data.get("new_name")
                 if folder:
-                    meta_path = os.path.join(BACKUP_ROOT, folder, "caly_meta.json")
+                    try:
+                        folder_path = safe_backup_path(folder)
+                    except ValueError:
+                        self.send_error(400, "Invalid folder name")
+                        return
+                    meta_path = folder_path / "caly_meta.json"
                     current_meta = {}
-                    if os.path.exists(meta_path):
+                    if meta_path.exists():
                         try:
                             with open(meta_path, 'r', encoding='utf-8') as f:
                                 current_meta = json.load(f)
@@ -102,7 +172,9 @@ class CalyRequestHandler(BaseHTTPRequestHandler):
                     with open(meta_path, 'w', encoding='utf-8') as f:
                         json.dump(current_meta, f, ensure_ascii=False)
                     self.send_response(200)
-                    self.send_header('Access-Control-Allow-Origin', '*')
+                    origin = _cors_origin(self.headers)
+                    if origin:
+                        self.send_header('Access-Control-Allow-Origin', origin)
                     self.end_headers()
                     self.wfile.write(b'{"status": "renamed"}')
                 else:
@@ -114,7 +186,8 @@ class CalyRequestHandler(BaseHTTPRequestHandler):
 def trigger_external_restore(backup_folder_name):
     backup_src = os.path.join(BACKUP_ROOT, backup_folder_name)
     steam_exe = os.path.join(STEAM_PATH, "steam.exe")
-    temp_bat = os.path.join(os.environ["TEMP"], "caly_restore.bat")
+    temp_dir = tempfile.mkdtemp(prefix="caly_")
+    temp_bat = os.path.join(temp_dir, "caly_restore.bat")
     flag_file = os.path.join(BACKUP_ROOT, "restore_success.flag")
     bat_content = [
         "@echo off",

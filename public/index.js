@@ -1,6 +1,13 @@
 (function() {
     'use strict';
     const API_URL = "http://localhost:9999";
+    // --- Segurança: escapa conteúdo antes de injetar no DOM (VULN-05) ---
+    function sanitize(str) {
+        if (str === null || str === undefined) return '';
+        const div = document.createElement('div');
+        div.textContent = String(str);
+        return div.innerHTML;
+    }
     function ensureCalyStyles() {
         if (document.getElementById('caly-styles')) return;
         const style = document.createElement('style');
@@ -92,7 +99,7 @@
                 <div class="caly-body">
                     <div class="caly-rename-container">
                         <div style="font-size:13px; color:#94a3b8;">Defina um apelido para este ponto de restauração:</div>
-                        <input type="text" class="caly-input" id="caly-rename-input" placeholder="Ex: Antes do Boss Final" value="${currentName || ''}" autocomplete="off">
+                        <input type="text" class="caly-input" id="caly-rename-input" placeholder="Ex: Antes do Boss Final" autocomplete="off">
                         <div style="font-size:11px; color:#64748b;">Deixe em branco para remover o apelido.</div>
                         <div class="caly-buttons-row">
                             <button class="caly-btn secondary" id="caly-cancel-btn">Cancelar</button>
@@ -104,6 +111,7 @@
         `;
         document.body.appendChild(overlay);
         const input = overlay.querySelector('#caly-rename-input');
+        input.value = currentName || '';
         const saveBtn = overlay.querySelector('#caly-save-btn');
         setTimeout(() => input.focus(), 100);
         const submit = () => executeRename(folder, input.value);
@@ -174,15 +182,11 @@
                 if (!nickname && !data.game_name) mainText = "Backup Automático";
                 let subText = dateStr;
                 if (nickname) subText += ` • ${gameName}`;
-                let imgHtml = `<div class="caly-no-icon">🎮</div>`;
-                if (appid && appid !== 0) {
-                    imgHtml = `<img src="https://cdn.cloudflare.steamstatic.com/steam/apps/${appid}/capsule_sm_120.jpg" class="caly-game-img" onerror="this.style.display='none'">`;
-                }
+                // Estrutura estática via innerHTML — zero dados remotos aqui (VULN-05)
                 item.innerHTML = `
-                    ${imgHtml}
                     <div class="caly-info">
-                        <span class="caly-main-text">${mainText}</span>
-                        <span class="caly-sub-text">${subText}</span>
+                        <span class="caly-main-text"></span>
+                        <span class="caly-sub-text"></span>
                     </div>
                     <div class="caly-actions">
                         <div class="caly-icon-btn edit" title="Renomear">
@@ -197,6 +201,22 @@
                         </button>
                     </div>
                 `;
+                // Dados remotos injetados exclusivamente via textContent — impossível executar HTML
+                item.querySelector('.caly-main-text').textContent = mainText;
+                item.querySelector('.caly-sub-text').textContent = subText;
+                // Imagem construída via DOM API — atributo src nunca passa por innerHTML
+                if (appid && appid !== 0 && /^\d+$/.test(String(appid))) {
+                    const img = document.createElement('img');
+                    img.src = `https://cdn.cloudflare.steamstatic.com/steam/apps/${appid}/capsule_sm_120.jpg`;
+                    img.className = 'caly-game-img';
+                    img.onerror = function() { this.style.display = 'none'; };
+                    item.prepend(img);
+                } else {
+                    const noIcon = document.createElement('div');
+                    noIcon.className = 'caly-no-icon';
+                    noIcon.textContent = '🎮';
+                    item.prepend(noIcon);
+                }
                 const restoreBtn = item.querySelector('.caly-btn');
                 const deleteBtn = item.querySelector('.caly-icon-btn.del');
                 const editBtn = item.querySelector('.caly-icon-btn.edit');
@@ -206,7 +226,7 @@
                 container.appendChild(item);
             });
         } catch (e) {
-            container.innerHTML = `<div style="padding:30px; text-align:center; color:#ef4444">Erro: ${e}</div>`;
+            container.innerHTML = `<div style="padding:30px; text-align:center; color:#ef4444">Erro ao carregar backups.</div>`;
         }
     }
     async function executeRename(folder, newName) {

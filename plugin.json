@@ -2,6 +2,6 @@
   "name": "calyrecall",
   "common_name": "CalyRecall",
   "description": "Backup automatizado de Userdata, Stats e Configs ao fechar jogos.",
-  "author": "BruxinCore",
-  "version": "1.0.0"
+  "author": "BruxinCore, JuniorD-Isael",
+  "version": "1.0.1"
 }
