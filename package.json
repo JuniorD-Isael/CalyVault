@@ -1,0 +1,13 @@
+{
+  "name": "calyrecall",
+  "version": "1.0.0",
+  "description": "Backup automatizado de Userdata, Stats e Configs ao fechar jogos.",
+  "author": "BruxinCore",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "lint": "echo \"No build step required.\""
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

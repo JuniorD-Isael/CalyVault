@@ -1,7 +1,7 @@
 {
-  "name": "calyrecall",
-  "common_name": "CalyRecall",
-  "description": "Backup automatizado de Userdata, Stats e Configs ao fechar jogos.",
-  "author": "BruxinCore",
-  "version": "1.0.0"
+  "name": "calyvault",
+  "common_name": "CalyVault",
+  "description": "Fork de segurança do CalyRecall (BruxinCore). Backup automático com hardening de CORS, Path Traversal, XSS e rotação de snapshots. Uso pessoal e estudo.",
+  "author": "BruxinCore (original), JuniorD-Isael (fork)",
+  "version": "1.0.1"
 }

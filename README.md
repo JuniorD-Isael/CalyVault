@@ -1,68 +1,116 @@
 <div align="center">
 
-# 🟣 CalyRecall 🟣 
+# 🔐 CalyVault
 
-**Automação de Backup e Restauração Inteligente para Steam (Millennium)**
+**Fork de Segurança · Baseado em [CalyRecall](https://github.com/BruxinCore/CalyRecall) por BruxinCore**
 
 [![Millennium](https://img.shields.io/badge/Millennium-Compatible-8b5cf6?style=for-the-badge&logo=steam)](https://steambrew.app/)
 [![Python](https://img.shields.io/badge/Backend-Python-ffe800?style=for-the-badge&logo=python&logoColor=black)](https://www.python.org/)
-[![Discord](https://img.shields.io/badge/Community-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/DQYxmFaywK)
-[![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)]()
-[![License](https://img.shields.io/badge/License-CSAL-red?style=for-the-badge)](LICENSE)
+[![Fork](https://img.shields.io/badge/Fork%20de-BruxinCore%2FCalyRecall-8b5cf6?style=for-the-badge&logo=github)](https://github.com/BruxinCore/CalyRecall)
+[![Uso](https://img.shields.io/badge/Uso-Estudo%20%2F%20Pessoal-gray?style=for-the-badge)]()
+[![License](https://img.shields.io/badge/License-CSAL-red?style=for-the-badge)](license)
 
 <p align="center">
   <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3BxdGp6Z3V4ZnV4ZnV4ZnV4ZnV4ZnV4ZnV4ZnV4ZnV4ZnV4eiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/LMcB8XjhG7ck/giphy.gif" width="100%" height="4" alt="divider">
 </p>
 
-<h3>Proteja seu legado. Viaje no tempo.</h3>
+<h3>Seus saves, blindados. Seu histórico, intacto.</h3>
 
 <p align="left">
-O <strong>CalyRecall</strong> é um plugin de segurança silencioso. Ele monitora sua sessão de jogo em tempo real. No momento em que você fecha um jogo, o protocolo <em>Recall</em> é ativado, criando um snapshot instantâneo dos seus dados mais valiosos.
+O <strong>CalyVault</strong> é uma variante endurecida do CalyRecall. Mantém todas as funcionalidades do projeto original e adiciona uma camada de segurança ofensiva: mitigação de CORS wildcard, bloqueio de Path Traversal, prevenção de Command Injection, proteção contra DOM XSS e rotação automática de backups com limite configurável.
 <br><br>
-Agora com o novo sistema de <strong>Restore</strong>, você pode reverter para qualquer ponto da história com apenas dois cliques. Nunca mais perca um save, uma configuração ou um status de plugin.
+Este projeto é um <strong>exercício de estudo em AppSec</strong> aplicado a um plugin real. Não é um produto, não tem suporte e <strong>não tem a intenção de substituir o CalyRecall original</strong>.
 </p>
 
 </div>
 
 ---
 
+## ⚠️ Aviso Importante
+
+> Este repositório é um **fork para uso pessoal e estudo**, derivado do projeto original **[CalyRecall](https://github.com/BruxinCore/CalyRecall)** criado por **[BruxinCore](https://github.com/BruxinCore)**.
+>
+> Todo o conceito, design visual, arquitetura e código-base original pertencem exclusivamente ao autor original.
+> Este fork **não é um produto**, **não tem releases oficiais** e **não visa substituir, competir ou deprecar** o projeto upstream.
+>
+> Quer o CalyRecall de verdade — com suporte, instalador e releases?
+> **👉 [github.com/BruxinCore/CalyRecall](https://github.com/BruxinCore/CalyRecall)**
+
+---
+
+## 🔐 Por que CalyVault?
+
+*Vault* = cofre. O diferencial deste fork é exclusivamente a camada de segurança aplicada sobre a base original. Cinco vulnerabilidades identificadas via análise Snyk foram mitigadas, e o comportamento funcional do plugin foi preservado integralmente.
+
+| CVE/Classe | Vetor | Mitigação aplicada |
+| :--- | :--- | :--- |
+| **Path Traversal** | Endpoints `/delete`, `/rename`, `/restore` | `os.path.basename()` na borda HTTP + `safe_backup_path()` com `Path.relative_to()` |
+| **Command Injection** | Variável `%TEMP%` no script `.bat` | `tempfile.mkdtemp()` — caminho imprevisível gerenciado pelo SO |
+| **CORS Wildcard** | Header `Access-Control-Allow-Origin: *` | Lista de permissões explícita (Steam origins + CEF `null`); sem fallback `*` |
+| **DOM XSS** | `innerHTML` com dados remotos | `textContent` para dados; DOM API para imagens; `appid` validado via regex |
+| **Information Disclosure** | Mensagens de erro expostas ao cliente | Erros genéricos na UI; detalhes apenas em logs internos |
+
+---
+
+## 🔁 Rotação de Backups
+
+Funcionalidade adicionada neste fork. O vault mantém automaticamente um número máximo de snapshots, deletando o mais antigo antes de criar um novo.
+
+```
+MAX_BACKUPS = 4  → configurável em backend/config.py
+
+Antes:  [Jan/10] [Jan/12] [Jan/14] [Jan/15]
+Criar:   deleta [Jan/10] → cria [Jan/16]
+Depois: [Jan/12] [Jan/14] [Jan/15] [Jan/16]
+```
+
+---
+
+## 📄 Documentação Técnica
+
+| Arquivo | Idioma | Conteúdo |
+| :--- | :--- | :--- |
+| [DOCS.md](DOCS.md) | 🇺🇸 English | Full module reference, REST API, security model, architecture diagrams |
+| [DOCS.pt-BR.md](DOCS.pt-BR.md) | 🇧🇷 Português | Referência completa de módulos, API REST, modelo de segurança, diagramas |
+
+---
+
 ## ⚡ Funcionalidades
+
+Todas herdadas do CalyRecall original, sem remoções:
 
 | Recurso | Descrição |
 | :--- | :--- |
-| 🎮 **Game Awareness** |Identifica automaticamente qual jogo foi fechado, exibindo o **Nome Real** e a **Capa Oficial** na lista de backups. |
-| 🕵️ **Monitoramento Passivo** | Detecta automaticamente o encerramento de processos de jogos (AppID). Zero impacto na performance. |
-| 📦 **Backup Cirúrgico** | Salva apenas o que importa (userdata, stats, cache, configs), ignorando o "lixo" temporário. |
-| 🔄 **Time Travel (Restore)** | Restaure backups antigos instantaneamente através de uma interface visual integrada. |
-| ✏️ **Gerenciamento Total** | Renomeie backups (ex: "Antes do Boss") ou delete snapshots antigos direto na interface. |
-| 🔔 **Notificações Nativas** | Feedback visual discreto via Windows Toast ao concluir operações. |
-| 🗃️ **Histórico Organizado** | Cria pastas timestamped para você voltar no tempo quando quiser. |
+| 🎮 **Game Awareness** | Identifica qual jogo foi fechado, exibindo nome e capa oficial na lista de backups. |
+| 🕵️ **Monitoramento Passivo** | Polling do registro Windows (`RunningAppID`). Zero impacto na performance. |
+| 📦 **Backup Cirúrgico** | Copia apenas userdata, stats, depotcache e configs de plugins. |
+| 🔄 **Time Travel (Restore)** | Restauração com um clique — para o Steam, substitui arquivos, reinicia. |
+| ✏️ **Gerenciamento** | Renomeie ou delete backups diretamente na interface. |
+| 🔔 **Notificações Nativas** | Toast do Windows ao concluir backup. |
+| 🔒 **Vault Mode** | Rotação automática + controles de segurança em toda a API. |
 
 ---
 
 ## 🕰️ Como usar o Restore
 
-O CalyRecall agora possui uma interface visual dedicada. Veja como é simples voltar no tempo:
-
 ### 1. O Botão de Acesso
-No canto inferior direito da sua Steam, procure pelo **Botão Roxo com Ícone de Relógio**. Ele é o seu portal para os backups.
+No canto inferior direito da Steam, procure pelo **Botão Roxo com Ícone de Relógio**.
 
 <div align="center">
-  <img src="https://i.imgur.com/gReSM17.png" alt="Botão CalyRecall" width="35%">
+  <img src="https://i.imgur.com/gReSM17.png" alt="Botão CalyVault" width="35%">
 </div>
 
 ### 2. Gerenciamento Visual
-Ao clicar, uma lista com todos os seus backups aparecerá, agora com os ícones dos jogos!
-* **Restaurar:** Clique no botão grande para voltar no tempo.
-* **Renomear (✏️):** Dê apelidos aos seus backups para lembrar de momentos importantes.
-* **Deletar (🗑️):** Remova backups que não precisa mais.
+- **Restaurar** — volta para o snapshot selecionado.
+- **Renomear (✏️)** — dê apelidos como "Antes do Boss Final".
+- **Deletar (🗑️)** — remova snapshots desnecessários.
 
 <div align="center">
-  <img src="https://i.imgur.com/w3NpTcM.png" alt="Menu de Restore" width="50%">
+  <img src="https://i.imgur.com/w3NpTcM.png" alt="Menu CalyVault" width="50%">
 </div>
 
-### 3. Confirmação Visual
-Pronto! O CalyRecall fará a substituição cirúrgica dos arquivos e te avisará quando estiver tudo seguro.
+### 3. Confirmação
+O CalyVault para o Steam, restaura cirurgicamente e reinicia automático.
 
 <div align="center">
   <img src="https://i.imgur.com/dD5YAs7.png" alt="Sucesso" width="50%">
@@ -70,72 +118,54 @@ Pronto! O CalyRecall fará a substituição cirúrgica dos arquivos e te avisar�
 
 ---
 
-## 🛡️ O Protocolo de Segurança (Backup Targets)
+## 🛡️ O que o Vault protege
 
-O **CalyRecall** foi configurado para "congelar" o estado das seguintes pastas críticas:
-
-> **📂 1. Userdata (`/userdata`)**
-> * Contém todos os seus saves locais, configurações de controle e preferências de nuvem.
->
-> **📊 2. Estatísticas (`/appcache/stats`)**
-> * Preserva os arquivos de métricas e estatísticas dos seus jogos.
->
-> **📦 3. Depot Cache (`/depotcache`)**
-> * Arquivos de manifesto e cache de download cruciais para a integridade dos jogos.
->
-> **🔌 4. Configurações de Plugins (`/config/stplug-in`)**
-> * Backup específico para configurações de plugins injetados na Steam.
+| Diretório | Conteúdo |
+| :--- | :--- |
+| `Steam/userdata` | Saves locais, configurações de controle, preferências de nuvem |
+| `Steam/appcache/stats` | Métricas e estatísticas de jogos |
+| `Steam/depotcache` | Manifests e cache de download |
+| `Steam/config/stplug-in` | Configurações de plugins injetados no Steam |
 
 ---
 
-## 🚀 Como Instalar
+## 🚀 Instalação
 
-⚠️ **Pré-requisito:** Tenha o [Millennium](https://steambrew.app/) instalado.
+⚠️ **Pré-requisito:** [Millennium](https://steambrew.app/) instalado.
 
-### ⚡ Método Recomendado (Instalador Oficial)
-A forma mais fácil, bonita e segura de instalar.
+> Este fork não tem instalador. Para o instalador oficial, acesse o **[repositório original](https://github.com/BruxinCore/CalyRecall)**.
 
-1. Vá até a aba **Releases** aqui no GitHub.
-2. Baixe o arquivo `calyrecall-installer.exe`.
-3. Execute o arquivo.
-4. Siga os passos na tela e clique em **INSTALAR** e configure sua instalação.
-   *(O instalador fechará a Steam automaticamente para garantir uma instalação limpa).*
-
-<div align="center">
-  <img src="https://i.imgur.com/ihobPo8.png" alt="Preview Tela Inicial" width="45%">
-  <img src="https://i.imgur.com/dOWCLwh.png" alt="Preview Instalação Personalizada" width="45%">
-</div>
-
-### ⚙️ Instalação Personalizada
-O instalador do CalyRecall é inteligente e permite flexibilidade total:
-
-* **Steam em outro local?** O instalador tenta detectar sua Steam automaticamente. Caso você tenha instalado a Steam em um HD/SSD secundário (ex: `D:\Games\Steam`), você pode selecionar a pasta correta manualmente clicando no ícone de pasta 📂.
-
-* **Pasta de Backups Personalizada:**
-  Por padrão, os backups ficam dentro da pasta do plugin. Se você tem pouco espaço no disco principal ou prefere salvar seus saves em outro lugar (como uma nuvem ou HD/SSD externo), você pode escolher uma **Pasta de Backup Personalizada** durante a instalação.
-
----
-
-### 🛠️ Método Manual (Avançado)
-
-Caso prefira não usar o instalador:
-
-1. Baixe a última versão do código fonte (ZIP).
-2. Extraia a pasta `CalyRecall` para dentro do diretório de plugins:
-   `.../Steam/plugins/CalyRecall`
+1. Clone ou baixe o ZIP deste repositório.
+2. Mova a pasta `CalyRecall` para o diretório de plugins do Steam:
+   ```
+   .../Steam/plugins/CalyRecall
+   ```
 3. Reinicie a Steam.
 
 ---
 
-## 📂 Onde ficam meus backups?
-
-Se você usou a instalação padrão, seus snapshots ficam seguros dentro da pasta do plugin:
+## 📂 Onde ficam os backups?
 
 ```text
 Steam/
-└── plugins/
-    └── CalyRecall/
-        └── backups/
-            ├── CalyBackup-2026-01-24_14-30-00/
-            ├── CalyBackup-2026-01-24_18-45-12/
-            └── ...
+└── millennium/
+    └── backups/
+        ├── CalyBackup-2026-01-24_14-30-00/
+        ├── CalyBackup-2026-01-24_18-45-12/
+        └── ...
+```
+
+Limite padrão: **4 snapshots**. Editável em `backend/config.py` → `MAX_BACKUPS`.
+
+---
+
+## 👤 Créditos
+
+| Papel | |
+| :--- | :--- |
+| **Criador do CalyRecall (projeto original)** | [BruxinCore](https://github.com/BruxinCore) |
+| **Repositório original** | [github.com/BruxinCore/CalyRecall](https://github.com/BruxinCore/CalyRecall) |
+| **Hardening de segurança · CalyVault (este fork)** | JuniorD-Isael |
+
+> Todo o mérito pelo conceito, design e implementação original é de **BruxinCore**.  
+> Este fork existe como exercício de segurança aplicada e uso pessoal — nada além disso.
